@@ -1,0 +1,121 @@
+﻿@page "/"
+@using System.Timers
+@implements IDisposable
+
+
+<h1>Хайч, Чулуу, Даавуу Тоглох</h1>
+
+<button class="btn btn-outline-dark" @onclick="PlayAgain">Тоглох</button>
+
+<section id="EnemyHand">
+    <div class="row justify-content-center">
+        <div class="card">
+            <img src="Hands/@opponentHand.Image" class="img" />
+        </div>
+
+    </div>
+</section>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <h1 class="text-center" style="color:@color">@Message</h1>
+}
+
+
+<section id="PlayerHand">
+    <div class="row justify-content-center mt-5">
+        @foreach (var hand in PlayerHands)
+        {
+            <div class="card mx-2" style="width:15rem">
+                <img src="Hands/@hand.Image" class="card-img-top selectable-img" @onclick="@(()=> SelectHand(hand))" />
+            </div>
+        }
+        @*<div class="card mx-2" style="width:15rem">
+                <img src="Hands/MyPaper.jpg" class="card-img-top selectable-img" />
+            </div>
+
+
+            <div class="card mx-2" style="width:15rem">
+                <img src="Hands/MyScissor.jpg" class="card-img-top selectable-img" />
+            </div>
+
+
+            <div class="card mx-2" style="width:15rem">
+                <img src="Hands/MyRock.jpg" class="card-img-top selectable-img" />
+            </div>*@
+
+    </div>
+</section>
+@code{
+
+    List<Hand> Oponenthands = new List<Hand>()
+{
+        new Hand{Selection=OptionsRPS.Paper, LosesAgainst=OptionsRPS.Scissor, WinsAgainst=OptionsRPS.Rock, Image="Paper.jpg"},
+        new Hand{Selection=OptionsRPS.Rock, LosesAgainst=OptionsRPS.Paper, WinsAgainst=OptionsRPS.Scissor, Image="Rock.jpg"},
+        new Hand{Selection=OptionsRPS.Scissor, LosesAgainst=OptionsRPS.Rock, WinsAgainst=OptionsRPS.Paper, Image="Paper.jpg"},
+    };
+
+    List<Hand> PlayerHands = new List<Hand>()
+{
+        new Hand{Selection=OptionsRPS.Paper, LosesAgainst=OptionsRPS.Scissor, WinsAgainst=OptionsRPS.Rock, Image="MyPaper.jpg"},
+        new Hand{Selection=OptionsRPS.Rock, LosesAgainst=OptionsRPS.Paper, WinsAgainst=OptionsRPS.Scissor, Image="MyRock.jpg"},
+        new Hand{Selection=OptionsRPS.Scissor, LosesAgainst=OptionsRPS.Rock, WinsAgainst=OptionsRPS.Paper, Image="MyScissor.jpg"},
+    };
+
+    Random Random;
+    Hand opponentHand;
+    Timer timer;
+    string Message = string.Empty;
+    string color = string.Empty;
+    protected override void OnInitialized()
+    {
+        opponentHand = Oponenthands[0];
+        Random = new Random();
+        timer = new Timer();
+        timer.Interval = 100;
+        timer.Elapsed += TimerElapsed;
+        timer.Start();
+
+    }
+    int opponentHandIndex = 0;
+    public void TimerElapsed(object sender, ElapsedEventArgs e)
+    {
+        opponentHandIndex = Random.Next(0, 2);
+        opponentHand = Oponenthands[opponentHandIndex];
+        StateHasChanged();
+    }
+    private void PlayAgain()
+    {
+        timer.Start();
+        Message = string.Empty;
+    }
+
+    private void SelectHand(Hand hand)
+    {
+        timer.Stop();
+        var result = hand.PlayAgainst(opponentHand);
+        if (result == GameStatus.Victory)
+        {
+            Message = "You Won";
+            color = "green";
+        }
+        else if (result == GameStatus.Lose)
+        {
+            Message = "You Lose";
+            color = "Red";
+        }
+        else
+        {
+            Message = "Draw";
+            color = "yellow";
+        }
+    }
+
+    public void Dispose()
+    {
+        if (timer != null)
+        {
+            timer.Dispose();
+        }
+    }
+}
